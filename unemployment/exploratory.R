@@ -1,7 +1,16 @@
 source('~/Code/unemployment/imports.R')
 
 glimpse(data)
-dsummary(data)
+summaries <- dsummary(data, digits = 3)
+fcode <- function(x) paste0('`', x, '`')
+
+mutate(summaries$categorical, var = fcode(var), type = fcode(type)) %>%
+    knitr::kable()
+
+mutate(summaries$numeric, var = fcode(var), type = fcode(type)) %>%
+    knitr::kable()
+
+class(data$ui)
 
 ggplot(data, aes(spell)) +
     ggthemes::geom_rangeframe() +
