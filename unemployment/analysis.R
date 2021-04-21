@@ -81,3 +81,5 @@ for (dist in c('weibull', 'exponential', 'lognormal', 'loglogistic', 'coxph')) {
 }
 
 regressors <- regressors[regressors != 'tenure']
+
+restricted <- survreg(spec(subset), data, dist = 'exponential')

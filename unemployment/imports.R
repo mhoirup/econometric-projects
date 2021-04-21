@@ -2,6 +2,7 @@ library(dplyr)
 library(Ecdat)
 library(survival)
 library(ggplot2)
+library(lmtest)
 
 data(UnempDur); data <- UnempDur; rm(UnempDur)
 

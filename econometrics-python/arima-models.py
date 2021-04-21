@@ -7,7 +7,7 @@ from pandas_datareader import data
 data = data.DataReader('DEXUSEU', 'fred')
 data
 
-class olsregr:
+class ols:
     def __init__(self, endo, exo, intercept=True):
         if not map(lambda z: isinstance(z, np.ndarray), [endo, exo]):
             endo, exo = np.array(endo), np.array(exo)
@@ -62,7 +62,7 @@ class Arima_process:
                 series = np.diff(series)
         if order[3] == 0:
             X = dshift(series, self.order[0])
-            initparams = olsregr(X[:,0], X[:,1:], intercept=False)
+            initparams = ols(X[:,0], X[:,1:], intercept=False)
         else:
             m = int(np.round(nrows/3)) + dof
             Rm, rho = np.zeros([m, m]), autocorr(series, m)
@@ -81,7 +81,7 @@ class Arima_process:
                     if Xnrows > Znrows: X = X[delta:]
                     else: Zy, Zx = Zy[delta:], Zx[delta:]
                 Zx = np.concatenate([X, Zx], 1)
-            initparams = olsregr(Zy, Zx, intercept=False).beta
+            initparams = ols(Zy, Zx, intercept=False).beta
         if method in ['CSS', 'CSS-ML']:
             CSS = lambda params: np.sum(_resids_(params) ** 2)
             self.optim = minimize(CSS, initparams, tol=1e-3)

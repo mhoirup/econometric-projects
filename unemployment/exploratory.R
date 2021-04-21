@@ -165,3 +165,8 @@ data.frame(time = mvnonparam$time, chaz = mvnonparam$cumhaz,
         plot.margin = margin(.1, -.09, .1, .1, "cm"))
 
 plot_save('nelson_aalen_mv.png')
+
+
+
+
+
