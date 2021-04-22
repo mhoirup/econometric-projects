@@ -10,8 +10,6 @@ mutate(summaries$categorical, var = fcode(var), type = fcode(type)) %>%
 mutate(summaries$numeric, var = fcode(var), type = fcode(type)) %>%
     knitr::kable()
 
-class(data$ui)
-
 ggplot(data, aes(spell)) +
     ggthemes::geom_rangeframe() +
     geom_bar(fill = myblack, colour = 'white') +
@@ -51,13 +49,7 @@ select(data, spell, censor4) %>%
     labs(x = 'Unemployment Duration', y = 'Count')
 
 plot_save('spell_censor4.png', height = 1.3, width = 2, dpi = 320)
-
-group_by(data, spell) %>%
-    mutate(censored_percentage = (sum(censor4) * 100) / n()) %>%
-    select(spell, censored_percentage) %>%
-    distinct() %>%
-    arrange(spell)
-
+cor(data$censor4, data$spell)
 
 ggplot(data, aes(age)) +
     ggthemes::geom_rangeframe() +
@@ -66,6 +58,8 @@ ggplot(data, aes(age)) +
     labs(x = 'Age', y = 'Count')
 
 plot_save('age_hist.png')
+sum(data$age < 40)
+(sum(data$age < 40) / nrow(data)) * 100
 
 ggplot(data, aes(reprate)) +
     ggthemes::geom_rangeframe() +
@@ -75,7 +69,6 @@ ggplot(data, aes(reprate)) +
 
 plot_save('reprate_hist.png')
 length(unique(data$reprate))
-sort(unique(data$reprate))
 
 ggplot(data, aes(disrate)) +
     ggthemes::geom_rangeframe() +
@@ -85,7 +78,6 @@ ggplot(data, aes(disrate)) +
 
 plot_save('disrate_hist.png')
 length(unique(data$disrate))
-sort(unique(data$disrate))
 
 ggplot(data, aes(logwage)) +
     ggthemes::geom_rangeframe() +
