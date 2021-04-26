@@ -1,8 +1,24 @@
 source('~/Code/unemployment/imports.R')
 
+tibble::as.tibble(data)
+
+options(width=120)
+
 glimpse(data)
-summaries <- dsummary(data, digits = 3)
-fcode <- function(x) paste0('`', x, '`')
+summaries <- dsummary(data, digits = 2)
+fcode <- function(x) ifelse(is.na(x), NA, paste0('`', x, '`'))
+
+Reduce(function(...) full_join(..., by = c('var', 'type')), summaries) %>%
+    select(-contains('NAs')) %>%
+    arrange(match(var, names(data))) %>%
+    mutate_at(vars(var, type, mode), fcode) %>%
+    mutate(mode = ifelse(!is.na(mode), paste0(mode, ' (',
+        formatC(prop.mode, 2, format = 'f'), '%)'), '')) %>%
+    select(-prop.mode) %>%
+    mutate_all(function(x) ifelse(is.na(x), '', x)) %>%
+    knitr::kable()
+
+
 
 mutate(summaries$categorical, var = fcode(var), type = fcode(type)) %>%
     knitr::kable()
@@ -43,10 +59,12 @@ select(data, spell, censor4) %>%
     scale_x_continuous(breaks = c(0, 10, 20, 30), limits = c(0, 30)) +
     scale_y_continuous(breaks = c(0, 250, 500)) +
     facet_wrap(~ censor4) +
-    theme(strip.text = element_text(family = 'Operator Mono Medium', size = 4),
-        axis.text = element_text(size = 4),
-        axis.title = element_text(size = 4)) +
+    theme(strip.text = element_text(family = 'Operator Mono Medium', size = 19,
+        vjust = -1.2), axis.text = element_text(size = 16),
+        axis.title = element_text(size = 16)) +
     labs(x = 'Unemployment Duration', y = 'Count')
+
+ggsave('~/mhoirup.github.io/assets/unemp/spell_censor4.png')
 
 plot_save('spell_censor4.png', height = 1.3, width = 2, dpi = 320)
 cor(data$censor4, data$spell)
@@ -68,16 +86,28 @@ ggplot(data, aes(reprate)) +
     labs(x = 'Replacement Rate', y = 'Density')
 
 plot_save('reprate_hist.png')
+
+densities <- data[, grepl('rate', names(data))] %>%
+    lapply(function(x) density(x)[c('x', 'y')]) %>%
+    as.data.frame()
+
+stack(select(densities, contains('.x'))) %>%
+    cbind(stack(select(densities, contains('.y')))) %>%
+    setNames(c('value', 'ind', 'density', 'var')) %>%
+    mutate(var = gsub('\\..*', '', var)) %>%
+    ggplot(aes(value, density)) +
+    ggthemes::geom_rangeframe(sides = 'b') +
+    geom_area(fill = myblack, size = 0.5) +
+    facet_wrap(~ var, ncol = 1) +
+    scale_y_continuous(breaks = c(0, 5, 10), labels = scales::number) +
+    theme(strip.text = element_text(family = 'Operator Mono Medium', hjust = 1)) +
+    labs(x = 'Value', y = 'Density')
+
+plot_save('rates_density.png', height = 2.5)
+
 length(unique(data$reprate))
-
-ggplot(data, aes(disrate)) +
-    ggthemes::geom_rangeframe() +
-    geom_density(fill = myblack, size = .2) +
-    scale_y_continuous(breaks = c(0, 3, 6), labels = scales::number) +
-    labs(x = 'Disregard Rate', y = 'Density')
-
-plot_save('disrate_hist.png')
 length(unique(data$disrate))
+
 
 ggplot(data, aes(logwage)) +
     ggthemes::geom_rangeframe() +
@@ -93,6 +123,10 @@ ggplot(data, aes(tenure)) +
     labs(x = 'Tenure', y = 'Count')
 
 plot_save('tenure_hist.png')
+
+ggplot(data, aes(age^2, tenure^2)) +
+    geom_point() +
+    ggthemes::geom_rangeframe()
 
 uvnonparam <- survfit(Surv(spell, censor4 == 0) ~ 1, data)
 
@@ -166,8 +200,3 @@ data.frame(time = mvnonparam$time, chaz = mvnonparam$cumhaz,
         plot.margin = margin(.1, -.09, .1, .1, "cm"))
 
 plot_save('nelson_aalen_mv.png')
-
-
-
-
-
