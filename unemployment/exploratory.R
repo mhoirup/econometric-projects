@@ -1,10 +1,6 @@
 source('~/Code/unemployment/imports.R')
 
 tibble::as.tibble(data)
-
-options(width=120)
-
-glimpse(data)
 summaries <- dsummary(data, digits = 2)
 fcode <- function(x) ifelse(is.na(x), NA, paste0('`', x, '`'))
 
@@ -18,19 +14,11 @@ Reduce(function(...) full_join(..., by = c('var', 'type')), summaries) %>%
     mutate_all(function(x) ifelse(is.na(x), '', x)) %>%
     knitr::kable()
 
-
-
-mutate(summaries$categorical, var = fcode(var), type = fcode(type)) %>%
-    knitr::kable()
-
-mutate(summaries$numeric, var = fcode(var), type = fcode(type)) %>%
-    knitr::kable()
-
 ggplot(data, aes(spell)) +
     ggthemes::geom_rangeframe() +
-    geom_bar(fill = myblack, colour = 'white') +
+    geom_bar(fill = myblack, colour = 'white', width = 0.5) +
     scale_x_continuous(breaks = c(0, 10, 20, 30), limits = c(0, 30)) +
-    scale_y_continuous(breaks = c(0, 200, 400, 600), limits = c(0, 600)) +
+    scale_y_continuous(breaks = c(0, 300, 600), limits = c(0, 600)) +
     labs(x = 'Unemployment Duration', y = 'Count')
 
 plot_save('spell_hist.png')
@@ -50,42 +38,15 @@ select(data, contains('censor')) %>%
 plot_save('censored_hist.png')
 sum(data$censor4); nrow(data) - sum(data$censor4)
 
-select(data, spell, censor4) %>%
-    mutate(censor4 = ifelse(censor4 == 1, 'Censor4 = True',
-        'Censor4 = False')) %>%
-    ggplot(aes(spell)) +
-    ggthemes::geom_rangeframe() +
-    geom_bar(fill = myblack, colour = 'white') +
-    scale_x_continuous(breaks = c(0, 10, 20, 30), limits = c(0, 30)) +
-    scale_y_continuous(breaks = c(0, 250, 500)) +
-    facet_wrap(~ censor4) +
-    theme(strip.text = element_text(family = 'Operator Mono Medium', size = 19,
-        vjust = -1.2), axis.text = element_text(size = 16),
-        axis.title = element_text(size = 16)) +
-    labs(x = 'Unemployment Duration', y = 'Count')
-
-ggsave('~/mhoirup.github.io/assets/unemp/spell_censor4.png')
-
-plot_save('spell_censor4.png', height = 1.3, width = 2, dpi = 320)
-cor(data$censor4, data$spell)
-
 ggplot(data, aes(age)) +
     ggthemes::geom_rangeframe() +
-    geom_histogram(binwidth = 2, fill = myblack, colour = 'white') +
-    scale_x_continuous(labels = scales::number) +
+    geom_bar(fill = myblack, colour = 'white', width = 0.7) +
+    scale_y_continuous(breaks = c(0, 75, 150)) +
     labs(x = 'Age', y = 'Count')
 
 plot_save('age_hist.png')
 sum(data$age < 40)
 (sum(data$age < 40) / nrow(data)) * 100
-
-ggplot(data, aes(reprate)) +
-    ggthemes::geom_rangeframe() +
-    geom_density(fill = myblack, size = .2) +
-    scale_y_continuous(breaks = c(0, 5, 10), labels = scales::number) +
-    labs(x = 'Replacement Rate', y = 'Density')
-
-plot_save('reprate_hist.png')
 
 densities <- data[, grepl('rate', names(data))] %>%
     lapply(function(x) density(x)[c('x', 'y')]) %>%
@@ -107,6 +68,35 @@ plot_save('rates_density.png', height = 2.5)
 
 length(unique(data$reprate))
 length(unique(data$disrate))
+
+select(data, spell, censor4) %>%
+    mutate(censor4 = ifelse(censor4 == 1, 'Censor4 = True',
+        'Censor4 = False')) %>%
+    ggplot(aes(spell)) +
+    ggthemes::geom_rangeframe() +
+    geom_bar(fill = myblack, colour = 'white') +
+    scale_x_continuous(breaks = c(0, 10, 20, 30), limits = c(0, 30)) +
+    scale_y_continuous(breaks = c(0, 250, 500)) +
+    facet_wrap(~ censor4) +
+    theme(strip.text = element_text(family = 'Operator Mono Medium', size = 19,
+        vjust = -1.2), axis.text = element_text(size = 16),
+        axis.title = element_text(size = 16)) +
+    labs(x = 'Unemployment Duration', y = 'Count')
+
+ggsave('~/mhoirup.github.io/assets/unemp/spell_censor4.png')
+
+plot_save('spell_censor4.png', height = 1.3, width = 2, dpi = 320)
+cor(data$censor4, data$spell)
+
+
+ggplot(data, aes(reprate)) +
+    ggthemes::geom_rangeframe() +
+    geom_density(fill = myblack, size = .2) +
+    scale_y_continuous(breaks = c(0, 5, 10), labels = scales::number) +
+    labs(x = 'Replacement Rate', y = 'Density')
+
+plot_save('reprate_hist.png')
+
 
 
 ggplot(data, aes(logwage)) +
