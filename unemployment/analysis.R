@@ -41,10 +41,14 @@ for (dist in c('weibull', 'exponential', 'lognormal', 'loglogistic', 'coxph')) {
         # Get the p-values and sort them highest to lowest. Idx gives the
         # indices in covariates corresponding to the sorted list of p-values.
         # Also keeps track of the current numbers of rows in progress.
-        cfs <- coeftest(unrestricted); rows <- nrow(progress)
-        pvalues <- cfs[!(rownames(cfs) %in% c('(Intercept)', 'Log(scale)')), 4]
-        idx <- sort(pvalues, index.return = TRUE, decreasing = TRUE)$ix
+        betas <- coeftest(unrestricted); rows <- nrow(progress)
+        pvalues <- betas[!(rownames(betas) %in% c('(Intercept)', 'Log(scale)')), 4]
+        idx <- sort(pvalues, index.return = TRUE, decreasing = TRUE)$ix # Sort
+        # regressor variables by their p-values (high to low)
         for (var in covariates[idx]) {
+            row <- c(distribution = dist, candidate = var,
+                candidate_pval = pvalues[var]
+                )
             # Estimate the model without the candiate variate and compute the
             # p-value for the likelihood ratio test.
             subset <- covariates[covariates != var]
@@ -80,6 +84,4 @@ for (dist in c('weibull', 'exponential', 'lognormal', 'loglogistic', 'coxph')) {
     cat(message)
 }
 
-regressors <- regressors[regressors != 'tenure']
-
-restricted <- survreg(spec(subset), data, dist = 'exponential')
+print(xtable(progress), type = 'html', file = '~/Desktop/example.html')
